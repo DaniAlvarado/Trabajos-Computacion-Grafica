@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+Daniela Alvarado Arboleda (1201924)
+
+
+<head>
+    <title>VOXEL PAINTER </title>
+    <style>
+        html,
+        body {
+
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        button {
+            background: #1AAB8A;
+            color: #fff;
+            border: none;
+            position: absolute;
+            height: 5%;
+            width: 15%;
+            font-size: 1em;
+            padding: 0 2em;
+            cursor: pointer;
+            transition: 800ms ease all;
+            outline: none;
+        }
+
+        button:hover {
+            background: #ddd;
+            color: #1AAB8A;
+        }
+
+        button:hover:before,
+        button:hover:after {
+            width: 100%;
+            transition: 800ms ease all;
+        }
+        
+    </style>
+</head>
+
+<body>
+
+    <div id="my-div">
+        <!--canvas id='canvas' width='500px' height='500px'></canvas-->
+        <strong>SPACE + CLICK</strong>: ELIMINA VOXEL<strong>
+            <button id='rot' type="button" style="left:80%; top:15%" onClick="animateClick()">GIRAR</button>
+
+            <button id='reset' type="button" style="left:80%; top:25%" onClick="stopClick()">LIMPIAR</button>
+
+            <button id='save' type="button" style="left:80%; top:35%" onClick="stopClick()">GUARDAR</button>
+            
+            <button id='color' type="button1" style="left:80%; top:45%" onClick="stopClick()">COLOR #1</button>
+            
+            <button id='color2' type="button2" style="left:80%; top:55%" onClick="stopClick()">COLOR #2</button>
+            
+            <button id='color3' type="button3" style="left:80%; top:65%" onClick="stopClick()">COLOR #3</button>
+
+
+    </div>
+
+    <script src="js/three.js"></script>
+    <script src="js/THREEx.screenshot.js"></script>
+    <script src="js/controls/OrbitControls.js"></script>
+    <script src="js/csg.js"></script>
+    <script src="js/THREE.CSG.js"></script>
+    <script>
+        // VARIABLES
+        var camera, scene, renderer;
+        var plane, container, stats;
+        var mouse, raycaster, isShiftDown = false;
+
+        var rollOverMesh, rollOverMaterial;
+        var cubeGeo, cubeMaterial;
+
+        //var action;
+
+        var clock = new THREE.Clock();
+
+        var objects = [];
+        var mixers = [];
+
+        init();
+        animate();
+        render();
+
+
+        function init() {
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+            camera.position.set(500, 800, 1300);
+            camera.lookAt(0, 0, 0);
+
+            controls = new THREE.OrbitControls(camera);
+            controls.target.set(0, 100, 0);
+            controls.update();
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);
+
+            container = document.createElement('div');
+            document.body.appendChild(container);
+
+            // INDICADOR CLICK
+            var rollOverGeo = new THREE.BoxBufferGeometry(50, 50, 50);
+
+            rollOverMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff0000,
+                opacity: 0.5,
+                transparent: true
+
+            });
+
+            rollOverMesh = new THREE.Mesh(rollOverGeo, rollOverMaterial);
+            scene.add(rollOverMesh);
+
+            // FIGURA 1
+
+            cubeGeo = new THREE.BoxBufferGeometry(50, 50, 50);
+            cubeMaterial = new THREE.MeshLambertMaterial({
+                color: 0xfeb74c,
+                //map: new THREE.TextureLoader().load('textures/1.png')
+            });
+
+
+            // FIGURA 2
+
+            //CREAR LAS GEOMETRÍAS
+            var boxGeometry = new THREE.BoxGeometry(50, 50, 50);
+            var sphereGeometry = new THREE.SphereGeometry(35, 35, 50);
+
+            var colorR = new THREE.Color(0x9ACD32);
+
+            //CREAR LOS MATERIALES
+            var material1 = new THREE.MeshLambertMaterial({
+                color: colorR
+            });
+
+            //CREAR LAS MALLAS
+            var cube = new THREE.Mesh(boxGeometry, material1);
+            var sphere = new THREE.Mesh(sphereGeometry, material1);
+
+            //CONVERTIR A CSG
+            var boxCSG = THREE.CSG.fromMesh(cube);
+            var sphereCSG = THREE.CSG.fromMesh(sphere);
+
+            //APLICAR LAS OPERACIONES
+            var result = boxCSG.intersect(sphereCSG);
+
+            //CONVERTIR A THREE
+            cube = THREE.CSG.toMesh(result);
+            cube.position.set(75, 25, 30);
+            cube.material = material1;
+
+
+            //AGREGAR A LA ESCENA LOS DIFERENTES ELEMENTOS
+            scene.add(cube);
+
+
+            //FIGURA 3
+            var closedSpline = new THREE.CatmullRomCurve3( //Puntos del avion
+                [
+                    new THREE.Vector3(-25, 14, 13),
+                    new THREE.Vector3(25, 50, -13),
+
+                ]
+            );
+
+            closedSpline.curveType = 'catmullrom';
+            closedSpline.closed = true;
+
+            var extrudeSettings = {
+                steps: 100,
+                bevelEnabled: false,
+                bevelOffset: 100,
+                extrudePath: closedSpline //Hacia donde tiene que dirigirse, si no se pone, solamente se
+                //genera una linea recta
+            };
+
+
+            var pts = [],
+                count = 2; //esto como que suaviza la curva
+
+            for (var i = 0; i < count; i++) {
+
+                var l = 30;
+                var a = 3 * i / count * Math.PI; //
+                pts.push(new THREE.Vector2(Math.cos(a) * l, Math.sin(a) * l));
+
+                for (var j = 0; j < 3; j++) { //para cerrar 
+
+                    pts.push(new THREE.Vector2(0, j - 0.2, 0));
+
+                }
+
+            }
+
+            var shape = new THREE.Shape(pts);
+            var geometry2 = new THREE.ExtrudeBufferGeometry(shape, extrudeSettings);
+            var material2 = new THREE.MeshLambertMaterial({
+                color: 0xe25454,
+                metalness: 0.5,
+                roughness: 0.1
+            });
+
+            var F3 = new THREE.Mesh(geometry2, material2);
+            //F3.rotation.yz =15;
+            F3.position.set(0, 80, 0);
+            F3.rotation.x = 30;
+            scene.add(F3); //agregado avion de papel a escena
+
+
+
+            // GRILLA
+            var gridHelper = new THREE.GridHelper(1000, 20);
+            scene.add(gridHelper);
+
+            // RAYCASTER IDK
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            var geometry = new THREE.PlaneBufferGeometry(1000, 1000);
+            geometry.rotateX(-Math.PI / 2);
+
+            plane = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+                visible: false
+            }));
+
+            scene.add(plane);
+            objects.push(plane);
+
+            // LUCES
+            var ambientLight = new THREE.AmbientLight(0x606060);
+            scene.add(ambientLight);
+
+            var directionalLight = new THREE.DirectionalLight(0xffffff);
+            directionalLight.position.set(1, 0.75, 0.5).normalize();
+            scene.add(directionalLight);
+
+            renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                preserveDrawingBuffer: true
+
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+
+
+
+            //
+
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousemove', onDocumentMouseMove, false);
+            document.addEventListener('mousedown', onDocumentMouseDown, false);
+            document.addEventListener('keydown', onDocumentKeyDown, false);
+            document.addEventListener('keyup', onDocumentKeyUp, false);
+
+            //
+
+            document.getElementById('rot').addEventListener('click', animate);
+            document.getElementById('reset').addEventListener('click', resetScene);
+            document.getElementById('save').addEventListener('click', save);
+
+            //
+            var color = document.getElementById("color").addEventListener('click',
+                function() {
+                    cubeMaterial = new THREE.MeshLambertMaterial({
+                        color: 0xEB2B50
+                    });
+
+                });
+
+            var color2 = document.getElementById("color2").addEventListener('click',
+                function() {
+                    cubeMaterial = new THREE.MeshLambertMaterial({
+                        color: 0x5d4ef5
+                    });
+
+                });
+
+            var color3 = document.getElementById("color3").addEventListener('click',
+                function() {
+                    cubeMaterial = new THREE.MeshLambertMaterial({
+                        color: 0x004040
+                    });
+
+                });
+
+        }
+
+        //VENTANA 
+        function onWindowResize() {
+
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+        }
+
+        function onDocumentMouseMove(event) {
+
+            event.preventDefault();
+
+            mouse.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
+
+            raycaster.setFromCamera(mouse, camera);
+
+            var intersects = raycaster.intersectObjects(objects);
+
+            if (intersects.length > 0) {
+
+                var intersect = intersects[0];
+
+                rollOverMesh.position.copy(intersect.point).add(intersect.face.normal);
+                rollOverMesh.position.divideScalar(50).floor().multiplyScalar(50).addScalar(25);
+
+            }
+
+
+            render();
+
+        }
+
+        function onDocumentMouseDown(event) {
+
+            event.preventDefault();
+
+            mouse.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
+
+            raycaster.setFromCamera(mouse, camera);
+
+            var intersects = raycaster.intersectObjects(objects);
+
+            if (intersects.length > 0) {
+
+                var intersect = intersects[0];
+
+                // delete cube
+
+                if (isShiftDown) {
+
+                    if (intersect.object !== plane) {
+
+                        scene.remove(intersect.object);
+
+                        objects.splice(objects.indexOf(intersect.object), 1);
+
+                    }
+
+                    // create cube
+
+                } else {
+
+                    //var voxel= new THREE.Mesh();
+                    //voxel = cube;
+
+                    var voxel = new THREE.Mesh(cubeGeo, cubeMaterial);
+                    voxel.position.copy(intersect.point).add(intersect.face.normal);
+                    voxel.position.divideScalar(50).floor().multiplyScalar(50).addScalar(25);
+                    scene.add(voxel);
+
+                    objects.push(voxel);
+
+
+                }
+
+
+                render();
+
+            }
+
+
+
+        }
+
+        function onDocumentKeyDown(event) {
+            switch (event.keyCode) {
+                case 32:
+                    isShiftDown = true;
+                    break;
+            }
+            console.log(indexTipoObjeto);
+        }
+
+        function onDocumentKeyUp(event) {
+
+            switch (event.keyCode) {
+
+                case 32:
+                    isShiftDown = false;
+                    break;
+
+            }
+
+        }
+
+        function animate() {
+
+            var time = -performance.now() * 0.0003;
+
+            camera.position.x = 1000 * Math.cos(time);
+            camera.position.z = 1000 * Math.sin(time);
+            camera.lookAt(scene.position);
+            //requestAnimationFrame(animate);
+
+            render();
+            stats.update();
+        }
+
+
+        function resetScene() {
+
+            while (scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+
+            }
+            render();
+        }
+
+        function save() {
+            // Abre una nueva ventana
+            var w = window.open('', '');
+            w.document.title = "Screenshot Canvas";
+            var img = new Image();
+            img.src = renderer.domElement.toDataURL();
+            w.document.body.appendChild(img);
+
+            // Descargar imagen automaticamente
+            var a = document.createElement('a');
+            a.href = renderer.domElement.toDataURL().replace("image/png", "image/octet-stream");
+            a.download = 'canvasfile.png'
+            a.click();
+        }
+
+        function animateClick() {
+            action.reset();
+            action.play();
+            console.log("GIRAR");
+        }
+
+        function render() {
+
+            renderer.render(scene, camera);
+
+        }
+    </script>
+</body></html>

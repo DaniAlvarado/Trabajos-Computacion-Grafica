@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Escena luces 2.0</title>
+    <style>
+        body {
+            background-color: #1A8FCF;
+            margin: 0px;
+            overflow: hidden;
+            height: 800px;
+            background-image: linear-gradient(#8a77df, #FFC0CB, #984CFF, #481787, #320d60, #1e0440, #0f0424);
+
+        }
+    </style>
+</head>
+
+<body>
+
+    <script src="js/three.js"></script>
+    <script src="js/controls/OrbitControls.js"></script>
+    <script src="js/csg.js"></script>
+    <script src="js/THREE.CSG.js"></script>
+
+    <script>
+        var scene, aspect, camera, renderer, controls;
+        var ambient, hemisphereluz, luzup, pluz, pluz2, pluz3, pluz4, pluz5, pluz6, luzup2;
+
+        var camera2;
+        var mapWidth = 320,
+            mapHeight = 240;
+        var w = window.innerWidth,
+            h = window.innerHeight;
+        var startTime = Date.now();
+
+        init();
+        animate();
+        render();
+
+        function init() {
+
+
+            //INICIALIZACIÓN
+            scene = new THREE.Scene();
+            aspect = window.innerWidth / window.innerHeight;
+            camera = new THREE.PerspectiveCamera(55, aspect, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer();
+            renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: true
+            }); // gradient
+
+            renderer.autoClear = true;
+
+            renderer.shadowMap.enable = true;
+            renderer.shadowMap.type = THREE.BasicShadowMap;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.physicallyCorrectLights = true;
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            window.addEventListener('resize', onWindowResize, false);
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+
+
+
+            //ELEMENTOS COMUNES
+            var size = 10;
+            var arrowSize = 1;
+            var divisions = size;
+            var origin = new THREE.Vector3(0, 0, 0);
+
+            //CREAR ILUMINACIÓN
+            ambientLight = new THREE.AmbientLight(0xab4ac5);
+            ambientLight.intensity = .2;
+
+            hemisphereluz = new THREE.HemisphereLight(0x370045, 0x9a7ff2, 2); //LUZ DEL MEDIO
+
+            luzup = new THREE.DirectionalLight(0x4051cc, 1.5, .2); //LUZ ARRIBA
+            luzup.shadow.mapSize.width = 512;
+            luzup.shadow.mapSize.height = 512;
+            luzup.shadow.camera.near = 0.5;
+            luzup.shadow.camera.far = 500;
+
+            luzup2 = new THREE.PointLight(0xFA9800, 100, 10); //LUZ ARRIBA
+            luzup2.position.set(0, 3, 20);
+            pluz = new THREE.PointLight(0xFFDF84, 6, 5); //LUZ idk
+            pluz2 = new THREE.PointLight(0xFFDF84, 6, 5); //LUZ idk
+            pluz3 = new THREE.PointLight(0xFFFDF84, 6, 5); //LUZ idk
+            pluz4 = new THREE.PointLight(0xFFDF84, 6, 5); //LUZ idk
+            pluz5 = new THREE.PointLight(0xFFDF84, 6, 5); //LUZ idk
+            pluz6 = new THREE.PointLight(0xFFDF84, 6, 5);
+            pluz7 = new THREE.PointLight(0x6873c3, 6, 5);
+
+            luzup.position.set(0, 2, -2);
+            luzup.lookAt(0, 0, 5);
+
+            pluz.position.y = 3.5;
+            pluz.position.x = -4;
+
+            pluz2.position.y = 3.5;
+            pluz2.position.z = -5;
+            pluz2.position.x = 4;
+
+            pluz3.position.y = 3.5;
+            pluz3.position.x = 4;
+
+            pluz4.position.y = 3.5;
+            pluz4.position.z = -11;
+            pluz4.position.x = 4;
+
+            pluz5.position.y = 3.5;
+            pluz5.position.z = -11;
+            pluz5.position.x = -4;
+
+            pluz6.position.y = 3.5;
+            pluz6.position.z = -5;
+            pluz6.position.x = -4;
+
+            scene.add(ambientLight, hemisphereluz, luzup, pluz, pluz2, pluz3, pluz4, pluz5, pluz6, pluz7);
+
+
+            var texture =new THREE.ImageUtils.loadTexture("js/textures/woodtexture.png");
+
+            //FLOOR
+            var floorgeo = new THREE.PlaneGeometry(10, 40);
+            var floormat = new THREE.MeshPhysicalMaterial({
+            //shininess: .2,
+            roughness: 0.5,
+            color: 0x55597a,
+            bumpScale: 0.0005, 
+            side: THREE.DoubleSide,
+            map: texture
+
+            });
+
+            var plane = new THREE.Mesh(floorgeo, floormat);
+            plane.rotation.x = THREE.Math.degToRad(90);
+            plane.reciveShadow = true;
+            scene.add(plane);
+            
+            
+            var texture2 =new THREE.ImageUtils.loadTexture("js/textures/water_normal3.jpg");
+
+            //FLOOR
+            var floorgeo2 = new THREE.PlaneGeometry(100, 100);
+            var floormat2 = new THREE.MeshPhysicalMaterial({
+            //shininess: .2,
+            roughness: 0.5,
+            color: 0x7A6BA1,
+            bumpScale: 0.0005,
+            side: THREE.DoubleSide,
+            map: texture2
+
+            });
+
+            var plane2 = new THREE.Mesh(floorgeo2, floormat2);
+            plane2.rotation.x = THREE.Math.degToRad(90);
+            plane2.reciveShadow = true;
+            plane2.position.set(0,-3,-35);
+            scene.add(plane2);
+            
+            //TABLE
+            var boxgeo = new THREE.BoxGeometry(2, .4, 1);
+            var boxmat = new THREE.MeshPhysicalMaterial({
+                color: 0xE2DEDF,
+                bumpScale: 0.0005,
+                roughness: 0.89
+                //specular: 0xFDD599
+            });
+            var box = new THREE.Mesh(boxgeo, boxmat);
+            box.position.x = -2.6;
+            box.position.z = 3.5;
+            box.position.y = .1;
+            box.rotation.y = THREE.Math.degToRad(90);
+            box.reciveShadow = true;
+            box.castShadow = true;
+            scene.add(box);
+
+            var box2 = new THREE.Mesh(boxgeo, boxmat);
+            box2.position.x = 2.6;
+            box2.position.z = 3.5;
+            box2.position.y = .1;
+            box2.rotation.y = THREE.Math.degToRad(90);
+            box2.reciveShadow = true;
+            box2.castShadow = true;
+            scene.add(box2);
+
+
+            //PUNTO LUZ
+            var spgeo = new THREE.SphereGeometry(.34, 15, 15);
+            var spmat = new THREE.MeshBasicMaterial({
+                shininess: 8,
+                color: 0xFFEFC1
+            });
+
+            var sphere = new THREE.Mesh(spgeo, spmat);
+            sphere.position.y = 2.7;
+            sphere.position.x = -4;
+            scene.add(sphere);
+
+            var sphere2 = new THREE.Mesh(spgeo, spmat);
+            sphere2.position.y = 2.7;
+            sphere2.position.z = -5;
+            sphere2.position.x = -4;
+            scene.add(sphere2);
+
+            var sphere3 = new THREE.Mesh(spgeo, spmat);
+            sphere3.position.y = 2.7;
+            sphere3.position.z = -11;
+            sphere3.position.x = -4;
+            scene.add(sphere3);
+
+            var sphere4 = new THREE.Mesh(spgeo, spmat);
+            sphere4.position.y = 2.7;
+            sphere4.position.z = -5;
+            sphere4.position.x = 4;
+            scene.add(sphere4);
+
+            var sphere5 = new THREE.Mesh(spgeo, spmat);
+            sphere5.position.y = 2.7;
+            sphere5.position.x = 4;
+            scene.add(sphere5);
+
+            var sphere6 = new THREE.Mesh(spgeo, spmat);
+            sphere6.position.y = 2.7;
+            sphere6.position.z = -11;
+            sphere6.position.x = 4;
+            scene.add(sphere6);
+
+            var sphere7 = new THREE.Mesh(spgeo, spmat);
+            sphere7.position.y = .7;
+            sphere7.position.z = -2.4;
+            sphere7.position.x = 4;
+            scene.add(sphere7);
+
+            var sphere8 = new THREE.Mesh(spgeo, spmat);
+            sphere8.position.y = .7;
+            sphere8.position.z = -2.4;
+            sphere8.position.x = -4;
+            scene.add(sphere8);
+
+
+            //FAROLA
+            var cygeo = new THREE.CylinderGeometry(.1, .2, 2.5, 10);
+            var cymat = new THREE.MeshPhongMaterial({
+                color: 0x747370,
+                specular: 0x6f6c76,
+                metalness: 1,
+                bumpScale: 0.0005
+            });
+
+            var cyli = new THREE.Mesh(cygeo, cymat);
+            cyli.position.y = 1.2;
+            cyli.position.x = -4;
+            cyli.reciveShadow = true;
+            cyli.castShadow = true;
+            scene.add(cyli);
+
+            var cyli2 = new THREE.Mesh(cygeo, cymat);
+            cyli2.position.y = 1.2;
+            cyli2.position.x = -4;
+            cyli2.position.z = -5;
+            cyli2.reciveShadow = true;
+            cyli2.castShadow = true;
+            scene.add(cyli2);
+
+            var cyli3 = new THREE.Mesh(cygeo, cymat);
+            cyli3.position.y = 1.2;
+            cyli3.position.x = -4;
+            cyli3.position.z = -11;
+            cyli3.reciveShadow = true;
+            scene.add(cyli3);
+
+
+            var cyli4 = new THREE.Mesh(cygeo, cymat);
+            cyli4.position.y = 1.2;
+            cyli4.position.x = 4;
+            cyli4.reciveShadow = true;
+            cyli4.castShadow = true;
+            scene.add(cyli4);
+
+            var cyli5 = new THREE.Mesh(cygeo, cymat);
+            cyli5.position.y = 1.2;
+            cyli5.position.x = 4;
+            cyli5.position.z = -5;
+            cyli5.reciveShadow = true;
+            cyli5.castShadow = true;
+            scene.add(cyli5);
+
+            var cyli6 = new THREE.Mesh(cygeo, cymat);
+            cyli6.position.y = 1.2;
+            cyli6.position.x = 4;
+            cyli6.position.z = -11;
+            cyli6.reciveShadow = true;
+            scene.add(cyli6);
+
+
+            var fgeo = new THREE.SphereGeometry(1, 15, 15);
+            var fmat = new THREE.MeshPhysicalMaterial({
+                color: 0x3A7F8F,
+                transparent: true,
+                bumpScale: 0.0005,
+                roughness: 0.7,
+                opacity: 0.6,
+                specular: 0x6f6c76
+
+            });
+            var f1 = new THREE.Mesh(fgeo, fmat);
+            f1.position.set(0, 1.2, -3);
+            scene.add(f1);
+
+            var materialp = new THREE.LineBasicMaterial({
+                color: 0x170e29
+            });
+
+            var points = [];
+            points.push(new THREE.Vector3(4.5, 1, 5));
+            points.push(new THREE.Vector3(4.5, 1, -20));
+            points.push(new THREE.Vector3(-4.5, 1, -20));
+            points.push(new THREE.Vector3(-4.5, 1, 5));
+            var geometryp = new THREE.BufferGeometry().setFromPoints(points);
+            var line = new THREE.Line(geometryp, materialp);
+            scene.add(line);
+
+            var points2 = [];
+            points2.push(new THREE.Vector3(4.5, .7, 5));
+            points2.push(new THREE.Vector3(4.5, .7, -20));
+            points2.push(new THREE.Vector3(-4.5, .7, -20));
+            points2.push(new THREE.Vector3(-4.5, .7, 5));
+            var geometryp2 = new THREE.BufferGeometry().setFromPoints(points2);
+            var line2 = new THREE.Line(geometryp2, materialp);
+            scene.add(line2);
+
+            var points3 = [];
+            points3.push(new THREE.Vector3(4.5, .35, 5));
+            points3.push(new THREE.Vector3(4.5, .35, -20));
+            points3.push(new THREE.Vector3(-4.5, .35, -20));
+            points3.push(new THREE.Vector3(-4.5, .35, 5));
+            var geometryp3 = new THREE.BufferGeometry().setFromPoints(points3);
+            var line3 = new THREE.Line(geometryp3, materialp);
+            scene.add(line3);
+
+
+
+            camera.position.y = 1.5;
+            camera.position.z = 7.6;
+            camera.lookAt(origin);
+        }
+
+        function onWindowResize() {
+
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            //camera2.aspect = window.innerWidth / window.innerHeight;
+            //camera2.updateProjectionMatrix();
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+        }
+
+
+        function animate() {
+            requestAnimationFrame(animate);
+            render();
+            controls.update();
+        }
+
+        function render() {
+            renderer.setViewport(0, 0, w, h);
+            renderer.setScissor(0, 0, w, h);
+            renderer.render(scene, camera);
+            renderer.setViewport(10, h - mapHeight - 10, mapWidth, mapHeight);
+            renderer.setScissor(10, h - mapHeight - 10, mapWidth, mapHeight);
+            renderer.setScissorTest(true);
+            renderer.render(scene, camera2);
+        }
+    </script>
+
+
+</body></html>

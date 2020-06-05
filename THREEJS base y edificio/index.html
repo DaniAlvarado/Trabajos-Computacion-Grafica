@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; }
+			canvas { display: block; }
+		</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<script>
+            
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.1, 1000 );
+			var renderer = new THREE.WebGLRenderer();
+            var axes = new THREE.AxisHelper(20);
+            scene.add(axes);
+            
+            renderer.setClearColor(0x2f6276);
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+            
+            var dotGeo = new THREE.Geometry();
+            
+            dotGeo.vertices.push(new THREE.Vector3(Math.cos(30),2,Math.sin(30))); //8
+            
+            for ( var i = 0; i < 2; i = i+0.2 ) {
+                
+            dotGeo.vertices.push(new THREE.Vector3(2,i,0)); //0
+            dotGeo.vertices.push(new THREE.Vector3(2,i,0.5)); //0
+            dotGeo.vertices.push(new THREE.Vector3(2,i,1)); //1
+            dotGeo.vertices.push(new THREE.Vector3(2,i,-0.5)); //0
+            dotGeo.vertices.push(new THREE.Vector3(1,i,2)); //2
+            dotGeo.vertices.push(new THREE.Vector3(0.5,i,-2)); //0
+            dotGeo.vertices.push(new THREE.Vector3(-0.5,i,-2)); //0
+            dotGeo.vertices.push(new THREE.Vector3(0.5,i,2)); //0
+            dotGeo.vertices.push(new THREE.Vector3(-0.5,i,2)); //0
+            dotGeo.vertices.push(new THREE.Vector3(-2,i,-0.5)); //0
+            dotGeo.vertices.push(new THREE.Vector3(-2,i,0.5)); //0
+            dotGeo.vertices.push(new THREE.Vector3(0,i,2)); //2.5
+            dotGeo.vertices.push(new THREE.Vector3(-1,i,2)); //3
+            dotGeo.vertices.push(new THREE.Vector3(-2,i,1)); //4
+            dotGeo.vertices.push(new THREE.Vector3(-2,i,0)); //4.5
+            dotGeo.vertices.push(new THREE.Vector3(-2,i,-1));//5
+            dotGeo.vertices.push(new THREE.Vector3(1.5,i,-1.5));//5
+            dotGeo.vertices.push(new THREE.Vector3(-1,i,-2));//6
+            dotGeo.vertices.push(new THREE.Vector3(0,i,-2)); //6.5
+            dotGeo.vertices.push(new THREE.Vector3(1,i,-2)); //7
+            dotGeo.vertices.push(new THREE.Vector3(2,i,-1)); //8
+            dotGeo.vertices.push(new THREE.Vector3(-1.5,i,-1.5));//5
+            dotGeo.vertices.push(new THREE.Vector3(1.5,i,1.5));//5
+            dotGeo.vertices.push(new THREE.Vector3(-1.5,i,1.5));
+
+                
+                
+            }
+            
+            var dotMate = new THREE.PointsMaterial({size: 0.2,color :0xffd814});
+            var dot = new THREE.Points(dotGeo, dotMate);
+            scene.add(dot);
+            
+            var dotGeo2 = new THREE.Geometry();
+            
+            for ( var k = 2; k < 3; k = k+0.2 ) {
+                for ( var j = 45; j < 60; j = j+0.2 ) {
+                
+                    dotGeo2.vertices.push(new THREE.Vector3(Math.cos(j),k,Math.sin(j))); //8
+                }
+            }
+            
+            var dotMate2 = new THREE.PointsMaterial({size: 0.2,color :0xee3a2f});
+            var dot2 = new THREE.Points(dotGeo2, dotMate2);
+            scene.add(dot2);
+ 
+            var dotGeo3 = new THREE.Geometry();
+            
+            //x = x0 + r*cos(theta)*sin(alpha)
+            //y = y0 + r*sin(theta)*sin(alpha)
+            //z = z0 + r*cos(alpha)
+            
+            dotGeo3.vertices.push(new THREE.Vector3(Math.cos(30)*Math.sin(30),3 + Math.sin(30)*Math.sin(30), Math.cos(30))); //8
+            
+            
+            var dotMate3 = new THREE.PointsMaterial({size: 0.7,color :0x241bb6});
+            var dot3 = new THREE.Points(dotGeo3, dotMate3);
+            scene.add(dot3);
+            
+            
+            var planeGeometry = new THREE.PlaneGeometry(40,20);
+            var planeMaterial = new THREE.MeshBasicMaterial({color: 0x252d4e});
+            var plane = new THREE.Mesh(planeGeometry,planeMaterial);
+            
+            plane.rotation.x = -0.5*Math.PI;
+            plane.position.x = 10;
+            plane.position.y = 0;
+            plane.position.z = 0;
+            
+            
+            scene.add(plane);
+            
+            
+            camera.position.x = -10;
+            camera.position.y = 20;
+			camera.position.z = 10;
+            camera.lookAt(scene.position);
+            
+        
+            renderer.render( scene, camera );
+			
+		</script>
+	</body>
+</html>
